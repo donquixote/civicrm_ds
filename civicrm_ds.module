@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * Implements hook_ds_fields_info()
+ */
+function civicrm_ds_ds_fields_info($entity_type) {
+
+  if (!civicrm_initialize()) {
+    return;
+  }
+
+  $fields = array();
+  switch ($entity_type) {
+    case 'user':
+
+      // Using fields set in civicrm_user_view() in civicrm.
+      $ufGroups = CRM_Core_BAO_UFGroup::getModuleUFGroup('User Account', 0, FALSE);
+      foreach ($ufGroups as $id => $info) {
+
+        // We use the title as the key, because that is what civicrm_user_view() does.
+        // This feels stupid, but so it is.
+        $key = $info['title'];
+
+        // Check if the field name is a valid key without spaces and special chars.
+        if (!preg_match('/^(_|[a-z])(_|[0-9]|[a-z])*$/i', $key)) {
+          continue;
+        }
+
+        // Check if this field is for Contact:Individual.
+        // Copied from civicrm_user_view().
+        $fieldType = CRM_Core_BAO_UFField::getProfileType($id);
+        if (CRM_Contact_BAO_ContactType::isaSubType($fieldType)) {
+          $fieldType = CRM_Contact_BAO_ContactType::getBasicType($fieldType);
+        }
+        if (($fieldType != 'Contact') && ($fieldType != 'Individual')) {
+          continue;
+        }
+
+        // Make this field available for DS.
+        $fields[$key] = array(
+          'title' => 'CiviCRM: ' . $info['title'],
+          'field_type' => DS_FIELD_TYPE_PREPROCESS,
+        );
+      }
+  }
+
+  return array($entity_type => $fields);
+}

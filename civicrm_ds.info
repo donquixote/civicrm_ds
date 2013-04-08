@@ -1,0 +1,6 @@
+name = CiviCRM DS
+description = Display suite fields for CiviCRM
+core = 7.x
+
+dependencies[] = ds
+dependencies[] = civicrm
